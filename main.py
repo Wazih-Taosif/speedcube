@@ -27,11 +27,17 @@ def index():
 @app.route("/browse")
 def browse():
     connection = connect_db() 
-
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM `Product` ") #executes the MySQL commands
-    result = cursor.fetchall() #it saves the executed codes in this variable.
-
-
+    result = cursor.fetchall() #it saves the executed codes in this variable. fetchall gives all result
     connection.close()
-    return render_template("browse.html.jinja")
+    return render_template("browse.html.jinja", products=result)
+
+@app.route("/product/<product_id>")
+def product_page(product_id):
+    connection = connect_db() 
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM `Product` WHERE `ID` = %s", (product_id)) #executes the MySQL commands
+    result = cursor.fetchone() #it saves the executed codes in this variable. fetchone gives 1 item.
+    connection.close()
+    return render_template("product.html.jinja", product = result)

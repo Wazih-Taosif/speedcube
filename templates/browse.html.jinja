@@ -1,14 +1,32 @@
 <!doctype html>
 <html>
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  </head>
-  <body>
-  {% include "components/navbar.html.jinja" %}
-   <h1 class="text-3xl font-bold underline">
-      Hello world!
-    </h1>
-  </body>
+</head>
+
+<body>
+    {% include "components/navbar.html.jinja" %}
+
+    <!-- Browse Page Template using Jinja + TailwindCSS -->
+<div class="px-8 py-6">
+  <h1 class="text-3xl font-bold mb-6">Browse Products</h1>
+
+  <!-- Products Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    {% for product in products %}
+    <a href="/product/{{ product['id'] }}" class="block bg-white shadow rounded-xl p-4 hover:shadow-lg transition duration-300">
+      <img src="{{ product['Image'] }}" alt="{{ product['Name'] }}" class="w-full h-48 object-cover rounded-lg mb-4">
+      <h3 class="text-lg font-semibold mb-2">{{ product['Name'] }}</h3>
+      <p class="text-gray-700 font-medium">${{ product['Price'] }}</p>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+
+</body>
+
 </html>
