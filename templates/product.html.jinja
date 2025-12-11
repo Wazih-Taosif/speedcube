@@ -1,13 +1,52 @@
 <!doctype html>
 <html>
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  </head>
-  <body>
-  {% include "components/navbar.html.jinja" %}
-  <h1>{{ product["Name"]}}</h1>
+</head>
 
-  </body>
+<body>
+    {% include "components/navbar.html.jinja" %}
+    <div class="px-8 py-10 max-w-5xl mx-auto">
+
+        <div class="flex flex-col md:flex-row md:space-x-10 space-y-10 md:space-y-0">
+
+            <!-- Product Image -->
+            <div class="flex-1">
+                <img src="{{ product['Image'] }}" alt="{{ product['Name'] }}"
+                    class="w-full h-[450px] object-contain rounded-xl shadow bg-white">
+            </div>
+
+            <!-- Product Info -->
+            <div class="flex-1 flex flex-col justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold mb-4">
+                        {{ product['Name'] }}
+                    </h1>
+
+                    <p class="text-2xl font-semibold text-gray-700 mb-6">
+                        ${{ product['Price'] }}
+                    </p>
+
+                    <p class="text-gray-600 leading-relaxed mb-6">
+                        {{ product['Description'] if product['Description'] else "No description available." }}
+                    </p>
+                </div>
+
+                <!-- Add to Cart -->
+                <a href="/add_to_cart/{{ product['ID'] }}"
+                    class="block bg-blue-600 text-white text-center py-3 rounded-xl text-lg hover:bg-blue-700 transition">
+                    Add to Cart
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+
+</body>
+
 </html>
