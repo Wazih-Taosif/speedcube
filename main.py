@@ -37,7 +37,27 @@ def browse():
 def product_page(product_id):
     connection = connect_db() 
     cursor = connection.cursor()
+    # 1. Fetch the main product
     cursor.execute("SELECT * FROM `Product` WHERE `ID` = %s", (product_id)) #executes the MySQL commands
     result = cursor.fetchone() #it saves the executed codes in this variable. fetchone gives 1 item.
+    # 2. Fetch simiilar products based on category field
+    cursor.execute("SELECT * FROM `Product` WHERE `Category` = %s AND `ID` != %s LIMIT 4", (result["Category"], product_id))
+    similar_products = cursor.fetchall()
+
+    #3. Fetch other products, not similar to the category clicked by user
+    cursor.execute("SELECT * FROM `Product` WHERE `Category` != %s ORDER BY RAND() LIMIT 4", (result["Category"],) )
+    other_products = cursor.fetchall()
+
     connection.close()
-    return render_template("product.html.jinja", product = result)
+
+    # Pass all THREE main product and similar products and other products to template
+    return render_template("product.html.jinja", product = result, products = similar_products, other_products = other_products)
+
+
+@app.route("/login")
+def login():
+    return render_template("login.html.jinja")
+
+@app.route("/register")
+def register():
+    return render_template("register.html.jinja")
