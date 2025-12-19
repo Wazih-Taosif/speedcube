@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, flash, redirect
-from flask_login import LoginManager, login_user
+from flask import Flask, render_template, request, flash, redirect, abort
+from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 
 import pymysql
 
@@ -13,6 +13,8 @@ config = Dynaconf(settings_file = ["settings.toml"])
 app.secret_key = config.secret_key
 
 login_manager = LoginManager(app) 
+
+login_manager.login_view = "/login"
 
 class User:
     is_authenticated = True
@@ -81,9 +83,27 @@ def product_page(product_id):
     other_products = cursor.fetchall()
 
     connection.close()
-
+    if result is None:
+        abort(404)
     # Pass all THREE main product and similar products and other products to template
     return render_template("product.html.jinja", product = result, products = similar_products, other_products = other_products)
+
+
+@app.route("/product/<product_id>/add_to_cart", methods = ["POST"])
+@login_required
+def add_to_cart(product_id):
+    quantity = request.form["qty"]
+
+    connection = connect_db()
+    cursor = connection.cursor()
+    cursor.execute("""
+                   INSERT INTO `Cart` (`Quantity`, `ProductID`, `UserID`) 
+                   VALUES (%s, %s, %s) 
+                   ON DUPLICATE KEY UPDATE
+                   `Quantity` = `Quantity` + %s
+                   """,(quantity, product_id, current_user.id, quantity))
+    connection.close()
+    return redirect('/cart')
 
 
 @app.route("/register", methods = ["POST", "GET"])
@@ -138,3 +158,12 @@ def login():
         
 
     return render_template("login.html.jinja")
+
+
+@app.route("/logout")
+@login_required
+def logout():
+
+    logout_user()
+    flash("You have been logged out.")
+    return redirect("/")

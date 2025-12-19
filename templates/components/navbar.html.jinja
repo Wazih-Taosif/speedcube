@@ -19,13 +19,19 @@
             <span
                 class="absolute left-1/2 -bottom-1 w-0 h-0.5 bg-black transition-all duration-300 group-hover:w-full group-hover:left-0"></span>
         </a>
-
         <!-- Cart Icon -->
         <a href="/cart" class="relative group">
             <img src="/static/images/cart icon.jpg" alt="Cart" class="w-7 h-7 hover:text-blue-300">
             <span
                 class="absolute left-1/2 -bottom-1 w-0 h-0.5 bg-black transition-all duration-300 group-hover:w-full group-hover:left-0"></span>
         </a>
+        {% if not current_user.is_authenticated%}
+        <a href="/login"></a>
+        {%else%}
+        <div>
+            Hi, {{current_user.name}}
+        </div>
+        {% endif%}
         <!-- Profile Dropdown -->
         <div class="relative group ml-6">
             <!-- Profile Icon -->
@@ -36,15 +42,16 @@
             <div class="absolute right-0 mt-2 w-36 bg-white shadow-lg rounded-lg 
                 opacity-0 invisible group-hover:opacity-100 group-hover:visible 
                 transition-all duration-200">
-
-                <a href="/login" class="block px-4 py-2 hover:bg-gray-100">
-                    Login
-                </a>
-
+                {% if not current_user.is_authenticated%}
+                <a href="/login" class="block px-4 py-2 hover:bg-gray-100">Login</a>
                 <a href="/register" class="block px-4 py-2 hover:bg-gray-100">
                     Sign Up
                 </a>
-
+                {%else%}
+                <div>
+                    <a href="/logout" class="block px-4 py-2 hover:bg-gray-100">Logout</a>
+                </div>
+                {% endif%}
             </div>
         </div>
 
