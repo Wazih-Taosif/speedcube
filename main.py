@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, flash, redirect, abort
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 
+from decimal import Decimal, ROUND_HALF_UP
+
 import pymysql
 
 from dynaconf import Dynaconf
@@ -167,3 +169,26 @@ def logout():
     logout_user()
     flash("You have been logged out.")
     return redirect("/")
+
+@app.route("/cart")
+@login_required
+def cart():
+    connection = connect_db()
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT * FROM `Cart` 
+        JOIN `Product` ON `Product`.`ID` = `Cart`.`ProductID`
+        WHERE `UserID` = %s
+""",(current_user.id))
+    results = cursor.fetchall()
+    connection.close()
+    subtotal = Decimal("0.00")
+    for item in results:
+        #calculates the total price of each item in the cart of the user
+        subtotal = subtotal + (item["Price"] * item["Quantity"])
+        #calculates the total tax
+        tax = (subtotal * Decimal("0.08")).quantize(Decimal("0.01"), rounding = ROUND_HALF_UP)
+        #adding tax to subtotal
+        total = subtotal + tax
+        
+    return render_template("cart.html.jinja", cart = results, subtotal = subtotal, tax = tax, total = total)
