@@ -8,6 +8,7 @@
 </head>
 
 <body>
+    {% include "components/navbar.html.jinja" %}
     <div class="max-w-6xl mx-auto px-6 py-10">
 
         <!-- Page Title -->
@@ -46,14 +47,23 @@
                     <!-- Quantity -->
                     <div class="flex flex-col items-center">
                         <label class="text-sm text-gray-600 mb-1">Qty</label>
-                        <input type="number" value="{{ item['Quantity'] }}" min="1"
-                            class="w-16 text-center border border-gray-300 rounded-lg py-1">
+
+                        <!-- Updating the qty -->
+                        <form method="post" action="/cart/{{ item['ProductID'] }}/update_qty">
+                            <input name="qty" type="number" value="{{ item['Quantity'] }}" min="1" max="3"
+                                class="w-16 text-center border border-gray-300 rounded-lg py-1"
+                                onchange="this.form.submit()">
+                        </form>
                     </div>
 
                     <!-- Remove -->
-                    <a href="/cart/remove/{{ item['ID'] }}" class="text-red-500 hover:text-red-700 text-sm font-medium">
-                        Remove
-                    </a>
+                    <form method="post" action="/cart/{{ item['ProductID'] }}/delete_product">
+                        <button href="/cart/remove/{{ item['ID'] }}"
+                            class="text-red-500 hover:text-red-700 text-sm font-medium">
+                            Remove
+                        </button>
+                    </form>
+
 
                 </div>
                 {% endfor %}

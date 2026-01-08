@@ -107,7 +107,7 @@ def add_to_cart(product_id):
     connection.close()
     return redirect('/cart')
 
-
+#register page
 @app.route("/register", methods = ["POST", "GET"])
 def register():
     if request.method == 'POST':
@@ -137,7 +137,7 @@ def register():
                 return redirect('/login')
     return render_template("register.html.jinja")
 
-
+#login page
 @app.route("/login", methods = ["POST", "GET"])
 def login():
     if request.method == 'POST':
@@ -182,13 +182,97 @@ def cart():
 """,(current_user.id))
     results = cursor.fetchall()
     connection.close()
+
+    #defining the below variables
     subtotal = Decimal("0.00")
+    tax = Decimal("0.00")
+    total = Decimal("0.00")
+
     for item in results:
         #calculates the total price of each item in the cart of the user
         subtotal = subtotal + (item["Price"] * item["Quantity"])
-        #calculates the total tax
-        tax = (subtotal * Decimal("0.08")).quantize(Decimal("0.01"), rounding = ROUND_HALF_UP)
-        #adding tax to subtotal
-        total = subtotal + tax
+        #calculates the total tax only if there is something in the cart
+        if subtotal > 0:
+            tax = (subtotal * Decimal("0.08")).quantize(Decimal("0.01"), rounding = ROUND_HALF_UP)
+            #adding tax to subtotal
+            total = subtotal + tax
         
     return render_template("cart.html.jinja", cart = results, subtotal = subtotal, tax = tax, total = total)
+
+
+
+#Updating the qty
+@app.route("/cart/<product_id>/update_qty", methods=["POST"])
+@login_required
+def update_cart(product_id):
+    new_qty = request.form["qty"]
+
+    connection = connect_db()
+    cursor = connection.cursor()
+    cursor.execute("""
+        UPDATE `Cart` SET `Quantity` = %s WHERE `ProductID` = %s AND `UserID` = %s
+        """,(new_qty, product_id, current_user.id))
+    connection.close()
+    return redirect("/cart")
+    
+
+#Deleting product from cart
+@app.route("/cart/<product_id>/delete_product", methods=["POST"])
+@login_required
+def delete_product(product_id):
+    connection = connect_db()
+    cursor = connection.cursor()
+    cursor.execute("""
+        DELETE FROM `Cart` WHERE `ProductID` = %s AND `UserID` = %s
+        """, (product_id, current_user.id))
+    connection.close()
+    return redirect("/cart")
+
+
+#Checkout page
+@app.route("/checkout", methods = ["POST", "GET"])
+@login_required
+def checkout():
+    connection = connect_db()
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT * FROM `Cart` 
+        JOIN `Product` ON `Product`.`ID` = `Cart`.`ProductID`
+        WHERE `UserID` = %s
+""",(current_user.id))
+    results = cursor.fetchall()
+    
+    if request.method == "POST":
+        # create the sale in the database
+        cursor.execute("""
+            INSERT INTO `Sale` (`UserID`) VALUES (%s)
+        """, (current_user.id, ) )
+        # store products bought
+
+        sale = cursor.lastrowid
+        for item in results:
+            cursor.execute("""INSERT INTO `SaleCart` 
+                        (`SaleID`, `ProductID`, `Quantity`) 
+                        VALUES (%s, %s, %s)""", (sale, item['ProductID'], item['Quantity']))
+        # empty cart
+        cursor.execute("DELETE FROM `Cart` WHERE `UserID` = %s ", (current_user.id) )
+        # thank you screen
+        return render_template("/thank-you.html.jinja")
+
+    connection.close()
+
+    #defining the below variables
+    subtotal = Decimal("0.00")
+    tax = Decimal("0.00")
+    total = Decimal("0.00")
+
+    for item in results:
+        #calculates the total price of each item in the cart of the user
+        subtotal = subtotal + (item["Price"] * item["Quantity"])
+        #calculates the total tax only if there is something in the cart
+        if subtotal > 0:
+            tax = (subtotal * Decimal("0.08")).quantize(Decimal("0.01"), rounding = ROUND_HALF_UP)
+            #adding tax to subtotal
+            total = subtotal + tax
+
+    return render_template("checkout.html.jinja", cart = results, subtotal = subtotal, tax = tax, total = total)
