@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>My Orders</title>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    {% include "components/navbar.html.jinja" %}
+
+    <main class="max-w-6xl mx-auto px-6 py-12">
+
+        <h1 class="text-3xl font-bold mb-8">My Orders</h1>
+
+        {% if orders %}
+        <div class="space-y-6">
+
+            {% for order in orders %}
+            <div class="bg-white rounded-xl shadow p-6">
+
+                <!-- Header -->
+                <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Order #{{ order["ID"] }}</p>
+                        <p class="text-sm text-gray-500">
+                            Placed on {{ order["Timestamp"].strftime('%b %d, %Y') }}
+                        </p>
+                    </div>
+
+                    <!-- Status (placeholder since not in DB yet) -->
+                    <span class="mt-2 md:mt-0 inline-block px-4 py-1 rounded-full text-sm font-medium
+                     bg-yellow-100 text-yellow-700">
+                        Pending
+                    </span>
+                </div>
+
+                <!-- Order Info -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-gray-700">
+
+                    <div>
+                        <p class="text-sm text-gray-500">Total Paid</p>
+                        <p class="font-semibold">
+                            ${{ "%.2f"|format(order["Total"]) }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-sm text-gray-500">Items</p>
+                        <p class="font-semibold">{{ order["Quantity"] }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-sm text-gray-500">Payment</p>
+                        <p class="font-semibold">Card</p>
+                    </div>
+
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-6 flex gap-4">
+                    <a href="/orders/{{ order['ID'] }}"
+                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                        View Details
+                    </a>
+                </div>
+
+            </div>
+            {% endfor %}
+
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-xl shadow p-12 text-center">
+            <h2 class="text-xl font-semibold mb-2">No orders yet</h2>
+            <p class="text-gray-600 mb-6">
+                You haven’t placed any orders.
+            </p>
+            <a href="/browse" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                Start Shopping
+            </a>
+        </div>
+        {% endif %}
+
+    </main>
+
+</body>
+
+</html>

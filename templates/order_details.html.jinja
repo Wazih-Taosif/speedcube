@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Order #{{ order["ID"] }}</title>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    {% include "components/navbar.html.jinja" %}
+
+    <main class="max-w-5xl mx-auto px-6 py-12">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold">
+                Order #{{ order["ID"] }}
+            </h1>
+            <p class="text-gray-600">
+                Placed on {{ order["Timestamp"].strftime('%b %d, %Y') }}
+            </p>
+        </div>
+
+        <!-- Order Items -->
+        <div class="bg-white rounded-xl shadow overflow-hidden">
+
+            <table class="w-full text-left">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-6 py-4">Product</th>
+                        <th class="px-6 py-4">Price</th>
+                        <th class="px-6 py-4">Quantity</th>
+                        <th class="px-6 py-4 text-right">Total</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in items %}
+                    <tr class="border-t">
+                        <td class="px-6 py-4 font-medium">
+                            {{ item["Name"] }}
+                        </td>
+                        <td class="px-6 py-4">
+                            ${{ "%.2f"|format(item["Price"]) }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {{ item["Quantity"] }}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            ${{ "%.2f"|format(item["LineTotal"]) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+
+        <!-- Order Summary -->
+        <div class="mt-6 bg-white rounded-xl shadow p-6 max-w-sm ml-auto">
+
+            <div class="flex justify-between text-gray-700 mb-2">
+                <span>Subtotal</span>
+                <span>${{ "%.2f"|format(subtotal) }}</span>
+            </div>
+
+            <div class="flex justify-between text-gray-700 mb-2">
+                <span>Tax</span>
+                <span>${{ "%.2f"|format(tax_amount) }}</span>
+            </div>
+
+            <div class="flex justify-between text-lg font-semibold">
+                <span>Total Paid</span>
+                <span>${{ "%.2f"|format(grand_total) }}</span>
+            </div>
+
+        </div>
+
+
+        <!-- Back -->
+        <a href="/orders" class="inline-block mt-8 text-blue-500 hover:underline">
+            ← Back to My Orders
+        </a>
+
+    </main>
+
+</body>
+
+</html>

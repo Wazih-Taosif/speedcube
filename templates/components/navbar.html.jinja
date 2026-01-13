@@ -25,7 +25,12 @@
             <span
                 class="absolute left-1/2 -bottom-1 w-0 h-0.5 bg-black transition-all duration-300 group-hover:w-full group-hover:left-0"></span>
         </a>
+        <div>
+            <a href="/orders" class="relative group text-lg font-medium hover:text-blue-300">My orders<span
+                    class="absolute left-1/2 -bottom-1 w-0 h-0.5 bg-black transition-all duration-300 group-hover:w-full group-hover:left-0"></span></a>
+        </div>
         {% endif %}
+
 
         {% if not current_user.is_authenticated%}
         <a href="/login"></a>

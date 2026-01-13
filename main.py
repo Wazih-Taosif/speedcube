@@ -247,7 +247,7 @@ def checkout():
         cursor.execute("""
             INSERT INTO `Sale` (`UserID`) VALUES (%s)
         """, (current_user.id, ) )
-        # store products bought
+        # store products bought 
 
         sale = cursor.lastrowid
         for item in results:
@@ -256,10 +256,21 @@ def checkout():
                         VALUES (%s, %s, %s)""", (sale, item['ProductID'], item['Quantity']))
         # empty cart
         cursor.execute("DELETE FROM `Cart` WHERE `UserID` = %s ", (current_user.id) )
-        # thank you screen
-        return render_template("/thank-you.html.jinja")
 
-    connection.close()
+        # calculate subtotal, tax, and total to display in thank-you
+        subtotal = sum(Decimal(item["Price"]) * item["Quantity"] for item in results)
+        tax = (subtotal * Decimal("0.08")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        total = subtotal + tax
+
+        # thank you screen — pass sale ID and total
+        return render_template(
+            "/thank-you.html.jinja",
+            order_id=sale,   # Sale ID from DB
+            subtotal=subtotal,
+            tax=tax,
+            total=total
+        )
+    connection.close() 
 
     #defining the below variables
     subtotal = Decimal("0.00")
@@ -276,3 +287,107 @@ def checkout():
             total = subtotal + tax
 
     return render_template("checkout.html.jinja", cart = results, subtotal = subtotal, tax = tax, total = total)
+
+
+# placed orders
+@app.route("/orders")
+def orders():
+    connection = connect_db()
+    cursor = connection.cursor()
+    
+    # Fetch orders for current user
+    cursor.execute("""
+        SELECT 
+            `Sale`.`ID`,
+            `Sale`.`Timestamp`,
+            SUM(`SaleCart`.`Quantity`) AS 'Quantity',
+            SUM(`SaleCart`.`Quantity` * `Product`.`Price`) AS 'Total'
+        FROM `Sale`
+        JOIN `SaleCart` ON `SaleCart`.`SaleID` = `Sale`.`ID`
+        JOIN `Product` ON `Product`.`ID` = `SaleCart`.`ProductID`
+        WHERE `UserID` = %s
+        GROUP BY `Sale`.`ID`
+        ORDER BY `Sale`.`Timestamp` DESC; 
+    """, (current_user.id,))
+    
+    results = cursor.fetchall()
+    connection.close()
+
+    # TAX RATE
+    TAX_RATE = Decimal("0.08")  # 8% tax
+
+    # Calculate tax and grand total for each order
+    orders_with_tax = []
+    for order in results:
+        subtotal = Decimal(order["Total"])  # Total from query is subtotal
+        tax = (subtotal * TAX_RATE).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        grand_total = subtotal + tax
+
+        orders_with_tax.append({
+            "ID": order["ID"],
+            "Timestamp": order["Timestamp"],
+            "Quantity": order["Quantity"],
+            "Subtotal": subtotal,
+            "Tax": tax,
+            "Total": grand_total
+        })
+
+    return render_template("orders.html.jinja", orders=orders_with_tax)
+
+
+#order details
+@app.route("/orders/<int:order_id>")
+@login_required
+def order_details(order_id):    
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    # Get order basic info (make sure order belongs to user)
+    cursor.execute("""
+        SELECT 
+            Sale.ID,
+            Sale.Timestamp
+        FROM Sale
+        WHERE Sale.ID = %s AND Sale.UserID = %s
+    """, (order_id, current_user.id))
+
+    order = cursor.fetchone()
+
+    if not order:
+        connection.close()
+        return "Order not found", 404
+
+    # Get items in this order
+    cursor.execute("""
+        SELECT
+            Product.Name,
+            Product.Price,
+            SaleCart.Quantity,
+            (SaleCart.Quantity * Product.Price) AS LineTotal
+        FROM SaleCart
+        JOIN Product ON Product.ID = SaleCart.ProductID
+        WHERE SaleCart.SaleID = %s
+    """, (order_id,))
+
+    items = cursor.fetchall()
+    connection.close()
+    
+    # TAX RATE
+    TAX_RATE = Decimal("0.08")  # 8% tax
+
+    # Calculate subtotal, tax, and grand total
+    subtotal = sum(Decimal(item["LineTotal"]) for item in items)
+    tax_amount = (subtotal * TAX_RATE).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    grand_total = subtotal + tax_amount
+
+
+    # Pass these to template
+    return render_template(
+        "order_details.html.jinja",
+        order=order,
+        items=items,
+        subtotal=subtotal,
+        tax_amount=tax_amount,
+        grand_total=grand_total
+    )
+
