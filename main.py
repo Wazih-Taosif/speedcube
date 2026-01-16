@@ -447,3 +447,28 @@ def order_details(order_id):
         grand_total=grand_total
     )
 
+#contacts page
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    if request.method == "POST":
+        name = request.form["name"]
+        email = request.form["email"]
+        message = request.form["message"]
+
+        connection = connect_db()
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            INSERT INTO ContactMessage (Name, Email, Message)
+            VALUES (%s, %s, %s)
+        """, (name, email, message))
+
+        connection.commit()
+        connection.close()
+
+        flash("Your message has been sent!")
+        return redirect("/contact")
+
+    return render_template("contact.html.jinja")
+
+

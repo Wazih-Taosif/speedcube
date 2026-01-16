@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Contact Us</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body>
+    {% include "components/navbar.html.jinja" %}
+
+    <div class="max-w-xl mx-auto px-8 py-12">
+
+        <h1 class="text-3xl font-bold mb-6">Contact Us</h1>
+
+        {% with messages = get_flashed_messages() %}
+        {% for msg in messages %}
+        <p class="mb-4 text-green-600">{{ msg }}</p>
+        {% endfor %}
+        {% endwith %}
+
+        <form method="POST" class="space-y-4">
+
+            <input type="text" name="name" required placeholder="Your Name" class="w-full border rounded-lg p-3">
+
+            <input type="email" name="email" required placeholder="Your Email" class="w-full border rounded-lg p-3">
+
+            <textarea name="message" required placeholder="Your Message"
+                class="w-full border rounded-lg p-3 h-32"></textarea>
+
+            <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                Send Message
+            </button>
+
+        </form>
+    </div>
+
+</body>
+
+</html>
