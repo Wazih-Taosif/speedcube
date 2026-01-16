@@ -59,6 +59,105 @@
 
     </div>
 
+
+    <!-- Reviews Section -->
+    <!-- Average Rating -->
+    {% if total_reviews > 0 %}
+    <div class="mb-4">
+        <p class="text-lg font-semibold text-center">
+            ⭐ {{ "%.1f"|format(avg_rating) }} / 5
+        </p>
+        <p class="text-sm text-gray-500 text-center">
+            Based on {{ total_reviews }} reviews
+        </p>
+    </div>
+    {% endif %}
+
+
+    <!-- Already written reviews -->
+    <div class="px-8 py-10 max-w-4xl mx-auto">
+
+        <h2 class="text-3xl font-bold mb-6">Customer Reviews</h2>
+
+        {% if reviews and reviews|length > 0 %}
+        <div class="space-y-6">
+            {% for review in reviews %}
+            <div class="bg-white p-6 rounded-xl shadow">
+
+                <div class="flex items-center justify-between mb-2">
+                    <p class="font-semibold text-gray-800">
+                        {{ review['Name'] }}
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        {{ review['Timestamp'].strftime('%b %d, %Y') }}
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="text-yellow-500 text-lg">
+                        {% for i in range(review['Rating']) %}
+                        ★
+                        {% endfor %}
+                        {% for i in range(5 - review['Rating']) %}
+                        ☆
+                        {% endfor %}
+                    </div>
+
+                    <span class="text-sm text-gray-600">
+                        {{ review['Rating'] }}/5
+                    </span>
+                </div>
+
+
+                <p class="text-gray-700">
+                    {{ review['Description'] }}
+                </p>
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500">No reviews yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Review form -->
+    <div class="px-8 pb-16 max-w-4xl mx-auto">
+
+        {% if current_user.is_authenticated %}
+
+        <h3 class="text-2xl font-semibold mb-4">Write a Review</h3>
+
+        <form method="POST" action="/product/{{ product['ID'] }}/review" class="space-y-4">
+
+            <textarea name="description" required class="w-full border rounded-lg p-3"
+                placeholder="Write your review..."></textarea>
+
+            <select name="rating" required class="border rounded-lg p-2">
+                <option value="">Select rating</option>
+                <option value="5">5 ⭐</option>
+                <option value="4">4 ⭐</option>
+                <option value="3">3 ⭐</option>
+                <option value="2">2 ⭐</option>
+                <option value="1">1 ⭐</option>
+            </select>
+
+            <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                Submit Review
+            </button>
+
+        </form>
+
+        {% else %}
+        <p class="text-gray-600">
+            <a href="/login" class="text-blue-600 underline">Log in</a>
+            to write a review.
+        </p>
+        {% endif %}
+
+    </div>
+
+
     <!--Similar Products-->
     <div class="px-8 py-10 max-w-6xl mx-auto">
 

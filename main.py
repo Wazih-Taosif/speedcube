@@ -75,7 +75,7 @@ def product_page(product_id):
     cursor = connection.cursor()
     # 1. Fetch the main product
     cursor.execute("SELECT * FROM `Product` WHERE `ID` = %s", (product_id)) #executes the MySQL commands
-    result = cursor.fetchone() #it saves the executed codes in this variable. fetchone gives 1 item.
+    result = cursor.fetchone() #it saves the executed codes in this variable. fetchone gives 1 item.    
     # 2. Fetch simiilar products based on category field
     cursor.execute("SELECT * FROM `Product` WHERE `Category` = %s AND `ID` != %s LIMIT 4", (result["Category"], product_id))
     similar_products = cursor.fetchall()
@@ -84,11 +84,67 @@ def product_page(product_id):
     cursor.execute("SELECT * FROM `Product` WHERE `Category` != %s ORDER BY RAND() LIMIT 4", (result["Category"],) )
     other_products = cursor.fetchall()
 
+    # 4. Fetch reviews for this product (with username)
+    cursor.execute("""
+        SELECT Review.*, User.Name
+        FROM Review
+        JOIN User ON Review.UserID = User.ID
+        WHERE Review.ProductID = %s
+        ORDER BY Review.Timestamp DESC
+    """, (product_id,)) 
+    reviews = cursor.fetchall()
+    #5. counting the average rating
+    cursor.execute("""
+    SELECT 
+        AVG(Rating) AS avg_rating,
+        COUNT(*) AS total_reviews
+        FROM Review
+        WHERE ProductID = %s
+    """, (product_id,))
+    rating_data = cursor.fetchone()
+
+
+    avg_rating = rating_data["avg_rating"] or 0
+    total_reviews = rating_data["total_reviews"]
+
+
     connection.close()
     if result is None:
         abort(404)
     # Pass all THREE main product and similar products and other products to template
-    return render_template("product.html.jinja", product = result, products = similar_products, other_products = other_products)
+    return render_template(
+    "product.html.jinja",
+    product=result,
+    products=similar_products,
+    other_products=other_products,
+    reviews=reviews,
+    avg_rating=avg_rating,
+    total_reviews=total_reviews,
+    
+)
+
+#writing reviews
+@app.route("/product/<product_id>/review", methods=["POST"])
+@login_required
+def add_review(product_id):
+
+    description = request.form["description"]
+    rating = request.form["rating"]
+
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        INSERT INTO Review (UserID, ProductID, Description, Rating)
+        VALUES (%s, %s, %s, %s)
+    """, (current_user.id, product_id, description, rating))
+
+    connection.commit()
+    connection.close()
+
+    return redirect(f"/product/{product_id}")
+
+
 
 
 @app.route("/product/<product_id>/add_to_cart", methods = ["POST"])
